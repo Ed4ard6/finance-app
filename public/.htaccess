@@ -1,0 +1,12 @@
+Options -Indexes
+RewriteEngine On
+
+
+# Si el archivo/directorio existe, sirve estático
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+
+# En otro caso, envía todo al front controller
+RewriteRule ^ index.php [L]

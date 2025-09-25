@@ -8,5 +8,8 @@ return [
 
 
     // Úsalo para generar links correctamente (local vs hosting)
-    'base_url' => getenv('BASE_URL') ?: 'http://localhost/finanzas-app/public',
+    //'base_url' => getenv('BASE_URL') ?: 'http://localhost/finanzas-app/public',
+    'base_url' => getenv('BASE_URL') ?: 'http://finance.test',
+
+    
 ];

@@ -1,10 +1,8 @@
 <?php
-// Front Controller: punto de entrada
+define('BASE_PATH', dirname(__DIR__));
+require __DIR__.'/../vendor/autoload.php';
 
+App\Core\Session::start();
 
-require __DIR__ . '/../vendor/autoload.php';
-
-
-// Cargar rutas y despachar
-$router = require __DIR__ . '/../app/Routes/web.php';
+$router = require BASE_PATH.'/app/Routes/web.php';
 $router->dispatch();

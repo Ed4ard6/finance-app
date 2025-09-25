@@ -1,3 +1,12 @@
+<?php if (App\Core\Session::get('user')): ?>
+  <a href="<?= $baseUrl ?>/">Dashboard</a>
+  <a href="<?= $baseUrl ?>/logout">Salir</a>
+<?php else: ?>
+  <a href="<?= $baseUrl ?>/login">Login</a>
+  <a href="<?= $baseUrl ?>/register">Registro</a>
+<?php endif; ?>
+
+
 <!doctype html>
 <html lang="es">
 
