@@ -1,0 +1,11 @@
+{
+"name": "eduardomachacon/finanzas-app",
+"description": "App de finanzas personales (MVC + POO)",
+"type": "project",
+"require": {},
+"autoload": {
+"psr-4": {
+"App\\": "app/"
+}
+}
+}
