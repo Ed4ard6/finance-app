@@ -2,31 +2,22 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
-use App\Core\Database;
-use App\Core\Auth;
 
 class HomeController extends Controller
 {
-    // Landing pública
-    public function index(): void
+    /** GET / */
+    public function index()
     {
-        $this->view('home/index', [
-            'titulo' => 'Finanzas - Inicio',
-        ]);
-    }
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 
-    // Dashboard (requiere login)
-    public function dashboard(): void
-    {
-        Auth::requireLogin();
+        // Si está autenticado → directo al Dashboard
+        if (!empty($_SESSION['user_id'])) {
+            header('Location: /dashboard');
+            exit;
+        }
 
-        $pdo  = Database::connection();
-        $stmt = $pdo->query('SELECT NOW() as ahora');
-        $row  = $stmt->fetch();
-
-        $this->view('dashboard/index', [
-            'titulo' => 'Panel de Finanzas',
-            'ahora'  => $row['ahora'] ?? null,
-        ]);
+        // Si NO está autenticado → muestra landing pública
+        // Ajusta la ruta si tu vista está en otra carpeta/nombre.
+        require __DIR__ . '/../Views/home/index.php';
     }
 }

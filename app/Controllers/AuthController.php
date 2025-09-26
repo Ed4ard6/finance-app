@@ -12,6 +12,13 @@ class AuthController extends Controller
     /** GET /register */
     public function showRegister()
     {
+        // Si ya está logueado → al dashboard
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (!empty($_SESSION['user_id'])) {
+            header('Location: /dashboard');
+            exit;
+        }
+
         $errores = [];
         $success = null; // el modal vive en /login
         $nombre  = null;
@@ -23,19 +30,37 @@ class AuthController extends Controller
     /** POST /register */
     public function register()
     {
+        // Si ya está logueado → al dashboard (bloquea registro estando autenticado)
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (!empty($_SESSION['user_id'])) {
+            header('Location: /dashboard');
+            exit;
+        }
+
         $errores = [];
         $success = null;
-        $nombre  = $_POST['nombre'] ?? null;
-        $email   = $_POST['email'] ?? null;
+        $nombre  = $_POST['nombre'] ?? '';
+        $email   = $_POST['email']  ?? '';
+        $pass    = $_POST['password'] ?? '';
+        $confirm = $_POST['confirm']  ?? '';
 
         $validator = new Validator($_POST, [
             'nombre'   => 'required|min:3|max:100',
             'email'    => 'required|email|max:150',
             'password' => 'required|min:6|max:255',
-            'confirm'  => 'required|same:password',
+            'confirm'  => 'required',
         ]);
 
-        if ($validator->passes()) {
+        if (!$validator->passes()) {
+            foreach ($validator->errors() as $msgs) {
+                foreach ($msgs as $msg) $errores[] = $msg;
+            }
+        }
+        if ($pass !== $confirm) {
+            $errores[] = 'La confirmación no coincide con la contraseña.';
+        }
+
+        if (empty($errores)) {
             try {
                 $pdo = Database::connection();
 
@@ -46,8 +71,6 @@ class AuthController extends Controller
                 if ($check->fetch()) {
                     $errores[] = "El correo ya está registrado.";
                 } else {
-                    /* // --- INSERT REAL (descomenta para insertar) ---
-                    
                     $stmt = $pdo->prepare(
                         "INSERT INTO usuarios (nombre, email, password_hash)
                          VALUES (:n, :e, :p)"
@@ -55,52 +78,39 @@ class AuthController extends Controller
                     $stmt->execute([
                         ':n' => $nombre,
                         ':e' => $email,
-                        ':p' => password_hash($_POST['password'], PASSWORD_BCRYPT),
-                    ]); */
+                        ':p' => password_hash($pass, PASSWORD_BCRYPT),
+                    ]);
 
-                    // PRG + Flash
-                    if (session_status() === PHP_SESSION_NONE) {
-                        session_start();
-                    }
                     $_SESSION['success'] = "✅ Usuario registrado con éxito.";
-
-                    header('Location: /login'); // GET /login
+                    header('Location: /login');
                     exit;
                 }
-            } catch (\PDOException $e) {
+            } catch (\Throwable $e) {
                 $errores[] = "Error al registrar el usuario: " . $e->getMessage();
-            }
-        } else {
-            foreach ($validator->errors() as $msgs) {
-                foreach ($msgs as $msg) {
-                    $errores[] = $msg;
-                }
             }
         }
 
-        // Errores: re-mostramos el formulario
         require __DIR__ . '/../Views/auth/register.php';
     }
 
     /** GET /login */
     public function showLogin()
     {
+        // Si ya está logueado → al dashboard
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+        if (!empty($_SESSION['user_id'])) {
+            header('Location: /dashboard');
+            exit;
+        }
+
         $errores = [];
         $success = null;
         $email   = null;
 
-        // Levantar flash desde el registro
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
+        // Flash de éxito tras registro
         if (!empty($_SESSION['success'])) {
             $success = $_SESSION['success'];
-            unset($_SESSION['success']); // flash: una sola vez
-        }
-        // Solo para cuando el usuario vuelve "atrás" desde el registro
-        elseif (isset($_GET['from']) && $_GET['from'] === 'register') {
-            $success = "✅ inicio de secion exitoso, bienvenido.";
-            $email   = null; // evita que quede poblado
+            unset($_SESSION['success']);
         }
 
         // Evitar BFCache
@@ -112,9 +122,11 @@ class AuthController extends Controller
     /** POST /login */
     public function login()
     {
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+
         $errores = [];
         $success = null;
-        $email   = $_POST['email'] ?? null;
+        $email   = $_POST['email'] ?? '';
 
         $validator = new Validator($_POST, [
             'email'    => 'required|email|max:150',
@@ -132,36 +144,40 @@ class AuthController extends Controller
                 if (!$user || !password_verify($_POST['password'], $user['password_hash'])) {
                     $errores[] = "Credenciales incorrectas.";
                 } else {
-                    if (session_status() === PHP_SESSION_NONE) {
-                        session_start();
-                    }
-                    $_SESSION['user_id']   = $user['id'];
+                    $_SESSION['user_id']   = (int) $user['id'];
                     $_SESSION['user_name'] = $user['nombre'];
+                    $_SESSION['user_email']= $user['email'] ?? null;
 
                     header('Location: /dashboard');
                     exit;
                 }
-            } catch (\PDOException $e) {
+            } catch (\Throwable $e) {
                 $errores[] = "Error al iniciar sesión: " . $e->getMessage();
             }
         } else {
             foreach ($validator->errors() as $msgs) {
-                foreach ($msgs as $msg) {
-                    $errores[] = $msg;
-                }
+                foreach ($msgs as $msg) $errores[] = $msg;
             }
         }
 
         require __DIR__ . '/../Views/auth/login.php';
     }
 
-    /** GET /logout */
+    /** GET|POST /logout */
     public function logout()
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+
+        // Vaciar y destruir sesión
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params['path'], $params['domain'], $params['secure'], $params['httponly']
+            );
         }
         session_destroy();
+
         header('Location: /login');
         exit;
     }
