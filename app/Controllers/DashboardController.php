@@ -3,66 +3,70 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Repositories\TransactionRepository;
+use App\Repositories\CategoryRepository;
+use App\Repositories\SalaryRepository;
 
 class DashboardController extends Controller
 {
-    /** Vista del panel general con datos reales */
     public function index()
     {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-        if (empty($_SESSION['user_id'])) {
-            header('Location: /login?redirect=/dashboard'); exit;
-        }
+        if (empty($_SESSION['user_id'])) { header('Location: /login?redirect=/dashboard'); exit; }
 
         $userId = (int)$_SESSION['user_id'];
         $ym     = $_GET['ym'] ?? date('Y-m');
 
-        $repo = new TransactionRepository();
+        $txRepo   = new TransactionRepository();
+        $catRepo  = new CategoryRepository();
+        $salRepo  = new SalaryRepository();
+
+        // Garantiza que exista una categoría income para salario
+        $salaryCat   = $catRepo->ensureSalary($userId);
+
+        // Trae el último salario (tabla salaries)
+        $salary      = $salRepo->latest($userId); // puede ser null
+
+        // Si existe salario, aplica/asegura la transacción del mes
+        if ($salary && $salary['amount'] > 0) {
+            $useCatId = $salary['category_id'] ?: (int)$salaryCat['id'];
+            $txRepo->ensureMonthlySalaryTransaction($userId, $ym, (float)$salary['amount'], $useCatId);
+        }
 
         // KPIs + distribución
-        $kpis = $repo->getMonthlyKpis($userId, $ym);
-        $dist = $repo->getExpenseDistributionByParent($userId, $ym);
+        $kpis = $txRepo->getMonthlyKpis($userId, $ym);
+        $dist = $txRepo->getExpenseDistributionByParent($userId, $ym);
 
-        // Detecta categoría salario si existe
-        $salaryCategoryId = $repo->getSalaryCategoryId($userId);
-        $hasSalary        = $repo->hasSalaryForMonth($userId, $ym, $salaryCategoryId);
-
-        // Variables para el layout
         $titulo    = 'Panel general';
         $pageClass = 'page-dashboard';
 
-        // Enviamos a la vista
+        // Para la vista (mostrar el último salario guardado en el input)
+        $currentSalaryAmount = $salary['amount'] ?? null;
+
         require BASE_PATH . '/app/Views/dashboard/index.php';
     }
 
-    /** POST /dashboard/salary → crear/actualizar salario del mes */
-    public function upsertSalary()
+    /** Guarda un nuevo registro en salaries (histórico) y vuelve al dashboard */
+    public function saveSalary()
     {
         if (session_status() !== PHP_SESSION_ACTIVE) session_start();
-        if (empty($_SESSION['user_id'])) {
-            header('Location: /login?redirect=/dashboard'); exit;
-        }
+        if (empty($_SESSION['user_id'])) { header('Location: /login?redirect=/dashboard'); exit; }
 
         $userId = (int)$_SESSION['user_id'];
-        $ym     = $_POST['ym'] ?? date('Y-m');
-        $amount = (float)($_POST['amount'] ?? 0);
-        $catId  = (int)($_POST['category_id'] ?? 0);
+        $amount = (float)($_POST['salary_amount'] ?? 0);
 
-        // Si no llega category_id por formulario, intenta detectar automáticamente
-        if ($catId <= 0) {
-            $repo = new TransactionRepository();
-            $auto = $repo->getSalaryCategoryId($userId);
-            if ($auto) $catId = $auto;
+        if ($amount <= 0) {
+            $_SESSION['flash_error'] = 'Ingresa un salario válido.';
+            header('Location: /dashboard'); exit;
         }
 
-        if ($amount <= 0 || $catId <= 0) {
-            $_SESSION['flash_error'] = 'Monto o categoría inválidos para el salario.';
-            header('Location: /dashboard?ym='.$ym); exit;
-        }
+        $catRepo = new CategoryRepository();
+        $salRepo = new SalaryRepository();
 
-        (new TransactionRepository())->upsertMonthlySalary($userId, $ym, $amount, $catId);
+        // Aseguramos que exista categoría de salario; guardamos nueva fila en salaries
+        $salaryCat = $catRepo->ensureSalary($userId);
+        $salRepo->insert($userId, $amount, (int)$salaryCat['id'], date('Y-m-d'));
 
-        $_SESSION['flash_success'] = 'Salario del mes actualizado correctamente.';
-        header('Location: /dashboard?ym='.$ym); exit;
+        $_SESSION['flash_success'] = 'Salario guardado. Se aplicará automáticamente cada mes.';
+        header('Location: /dashboard'); exit;
     }
 }

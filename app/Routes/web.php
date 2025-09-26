@@ -3,88 +3,87 @@
 use App\Controllers\HomeController;
 use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
+use App\Controllers\TransactionsController;
+use App\Controllers\RulesController;
 use App\Middleware\Auth;
 
-// Públicas
+// ===== Públicas
 $router->get('/',           [HomeController::class, 'index']);
 $router->get('/login',      [AuthController::class, 'showLogin']);
 $router->post('/login',     [AuthController::class, 'login']);
 $router->get('/register',   [AuthController::class, 'showRegister']);
 $router->post('/register',  [AuthController::class, 'register']);
-
-// Logout (GET/POST)
 $router->get('/logout',     [AuthController::class, 'logout']);
 $router->post('/logout',    [AuthController::class, 'logout']);
 
-// Protegidas
+// ===== Protegidas (vistas GET)
 $router->get('/dashboard', function () {
-    (new Auth)(); // middleware
-    (new DashboardController)->index();        // Panel general con datos reales
-});
-
-// NUEVO: endpoint para crear/actualizar salario del mes
-$router->post('/dashboard/salary', function () {
     (new Auth)();
-    (new DashboardController)->upsertSalary();
+    (new DashboardController)->index(); // Panel general
 });
 
-// Transacciones
 $router->get('/transactions', function () {
     (new Auth)();
+    // Si tienes un controlador para listar, úsalo.
+    // (new TransactionsController)->index();
     require BASE_PATH . '/app/Views/transactions/index.php';
 });
 
-// Presupuestos
 $router->get('/budgets', function () {
     (new Auth)();
     require BASE_PATH . '/app/Views/budgets/index.php';
 });
 
-// Reglas
 $router->get('/rules', function () {
     (new Auth)();
     require BASE_PATH . '/app/Views/rules/index.php';
 });
 
-// Ahorros
 $router->get('/savings', function () {
     (new Auth)();
     require BASE_PATH . '/app/Views/savings/index.php';
 });
 
-// Deudas
 $router->get('/debts', function () {
     (new Auth)();
     require BASE_PATH . '/app/Views/debts/index.php';
 });
 
-// Comparador de deudas
+// Atajos de reportes que usa el header / dashboard
 $router->get('/debts/compare', function () {
     (new Auth)();
     $titulo = 'Comparador de deudas'; $pageClass='page-debt-compare';
     require BASE_PATH . '/app/Views/reports/comparador_deudas.php';
 });
-
-// Cascada del mes (Waterfall)
 $router->get('/reports/waterfall', function () {
     (new Auth)();
     require BASE_PATH . '/app/Views/reports/waterfall.php';
 });
-
-// Calendario / Mapa de calor
 $router->get('/reports/calendar', function () {
     (new Auth)();
     require BASE_PATH . '/app/Views/reports/calendario.php';
 });
-
-// Planificador de quincena
 $router->get('/planner', function () {
     (new Auth)();
     require BASE_PATH . '/app/Views/planner/quincena.php';
 });
-
-// Reporte del mes (narrado)
 $router->get('/reports/monthly', function () {
     (new Auth)();
     require BASE_PATH . '/app/Views/reports/mensual.php';
+});
+
+// ===== Acciones POST (persistencia)
+$router->post('/settings/salary', function () {
+    (new Auth)();
+    (new DashboardController)->saveSalary(); // guarda salario fijo (tabla salaries) y redirige
+});
+
+$router->post('/transactions', function () {
+    (new Auth)();
+    (new TransactionsController)->store(); // crea gasto/ingreso/ahorro/deuda
+});
+
+$router->post('/rules/generate', function () {
+    (new Auth)();
+    (new RulesController)->generate(); // placeholder
 });
