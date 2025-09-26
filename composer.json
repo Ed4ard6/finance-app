@@ -2,7 +2,9 @@
 "name": "eduardomachacon/finanzas-app",
 "description": "App de finanzas personales (MVC + POO)",
 "type": "project",
-"require": {},
+"require": {
+        "vlucas/phpdotenv": "^5.6"
+    },
 "autoload": {
 "psr-4": {
 "App\\": "app/"

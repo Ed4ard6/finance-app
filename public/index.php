@@ -1,8 +1,21 @@
 <?php
+declare(strict_types=1);
+
 define('BASE_PATH', dirname(__DIR__));
-require __DIR__.'/../vendor/autoload.php';
+require BASE_PATH . '/vendor/autoload.php';
 
-App\Core\Session::start();
+use App\Core\Router;
 
-$router = require BASE_PATH.'/app/Routes/web.php';
-$router->dispatch();
+// Sesión (si la usas globalmente)
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+
+// 1) Instanciar router
+$router = new Router();
+
+// 2) Cargar las rutas (aquí $router ya existe)
+require BASE_PATH . '/app/Routes/web.php';
+
+// 3) Despachar
+$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+$path   = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+$router->dispatch($method, $path);

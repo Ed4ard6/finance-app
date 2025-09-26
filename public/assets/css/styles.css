@@ -1,0 +1,363 @@
+/* =======================================================
+   FINANZAS APP – ESTILOS GLOBALES
+   Estructura:
+   1) Variables (tema base + tema claro)
+   2) Reset / Base
+   3) Layout general
+   4) Header
+   5) Landing (página pública)
+   6) Auth (login/register)
+   7) Utilidades (espacios, grid)
+   8) Componentes Reutilizables (Dashboard)
+      - Tarjetas, Botones, Tabla, Badges, Progreso, Bloques
+   9) Dashboard (ajustes de página)
+   10) Footer (placeholder)
+   ======================================================= */
+
+
+/* =======================================================
+   1) VARIABLES (tema base)
+   ======================================================= */
+:root {
+  /* Paleta principal (heredada de tu portafolio) */
+  --bg-color: #0f1724;
+  --card-bg: #0b1220;
+  --text-color: #e6eef8;
+  --muted-color: #94a3b8;
+  --accent-color: #7c3aed;    /* morado */
+  --accent-2-color: #2563eb;  /* azul */
+
+  /* UI */
+  --form-bg-opacity: rgba(255, 255, 255, 0.05);
+  --border-color: rgba(255, 255, 255, 0.08);
+  --radius: 10px;
+
+  /* Superficies claras para Dashboard */
+  --surface: #ffffff;
+  --surface-2: #f8fafc;
+
+  /* Estados */
+  --success: #059669;
+  --danger:  #dc2626;
+  --rose-600: #e11d48;
+
+  /* Efectos */
+  --ring: rgba(37,99,235,.18);
+  --shadow-sm: 0 6px 18px rgba(0,0,0,.05);
+  --shadow-md: 0 10px 30px rgba(0,0,0,.06);
+}
+
+/* Tema claro opcional */
+body.light-theme {
+  --bg-color: #f1f5f9;
+  --card-bg: #e2e8f0;
+  --text-color: #0f1724;
+  --muted-color: #475569;
+  --accent-color: #4f46e5;
+  --accent-2-color: #6366f1;
+  --form-bg-opacity: rgba(0, 0, 0, 0.05);
+  --border-color: rgba(0, 0, 0, 0.08);
+
+  /* superficies en light */
+  --surface: #ffffff;
+  --surface-2: #f1f5f9;
+}
+
+
+/* =======================================================
+   2) RESET / BASE
+   ======================================================= */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  background: var(--bg-color);
+  color: var(--text-color);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+img { max-width: 100%; display: block; }
+
+
+/* =======================================================
+   3) LAYOUT GENERAL
+   ======================================================= */
+main.container {
+  flex-grow: 1;
+  padding: 20px;
+}
+
+
+/* =======================================================
+   4) HEADER
+   ======================================================= */
+header.main-header {
+  width: 100%;
+  padding: 10px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card-bg);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--border-color);
+  height: 70px;
+}
+
+header .logo h2 {
+  color: var(--accent-color);
+  margin: 0;
+}
+
+header .nav a {
+  color: var(--muted-color);
+  text-decoration: none;
+  font-weight: 500;
+  margin-left: 20px;
+  transition: color 0.25s ease;
+}
+
+header .nav a:hover {
+  color: var(--text-color);
+}
+
+
+/* =======================================================
+   5) LANDING (página pública)
+   ======================================================= */
+.landing {
+  max-width: 800px;
+  margin: 100px auto;
+  text-align: center;
+  padding: 20px;
+}
+
+.landing h1 {
+  font-size: 2.5rem;
+  color: var(--accent-2-color);
+  margin-bottom: 15px;
+}
+
+.landing p {
+  color: var(--muted-color);
+  font-size: 1.1rem;
+  margin-bottom: 25px;
+}
+
+.landing .btn {
+  display: inline-block;
+  margin: 0 10px;
+  padding: 12px 24px;
+  border-radius: var(--radius);
+  background: linear-gradient(90deg, var(--accent-2-color), var(--accent-color));
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  transition: transform 0.25s ease;
+}
+.landing .btn:hover { transform: scale(1.05); }
+
+
+/* =======================================================
+   6) AUTH (Login / Register)
+   ======================================================= */
+.auth-container {
+  max-width: 400px;
+  margin: 80px auto;
+  background: var(--card-bg);
+  padding: 30px;
+  border-radius: var(--radius);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  border: 1px solid var(--border-color);
+}
+
+.auth-container h1 {
+  margin-bottom: 20px;
+  color: var(--accent-color);
+  text-align: center;
+}
+
+/* Inputs */
+.auth-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  background: var(--form-bg-opacity);
+  color: var(--text-color);
+}
+.auth-container input::placeholder { color: var(--muted-color); }
+
+/* Botón principal */
+.auth-container button {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(90deg, var(--accent-2-color), var(--accent-color));
+  color: white;
+  font-weight: bold;
+  border: none;
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: transform 0.25s ease, opacity .15s ease;
+}
+.auth-container button:hover { transform: scale(1.03); }
+
+/* Links de cambio */
+.switch-auth { text-align: center; margin-top: 15px; color: var(--muted-color); }
+.switch-auth a { color: var(--accent-2-color); text-decoration: none; font-weight: bold; }
+.switch-auth a:hover { text-decoration: underline; }
+
+/* Mensajes de error */
+.error-box {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  padding: 10px;
+  border-radius: var(--radius);
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+
+/* =======================================================
+   7) UTILIDADES (espacios, grid responsivo)
+   ======================================================= */
+
+   /* Utilidades tipográficas */
+.text-muted { color: var(--muted-color); }
+.fw-600     { font-weight: 600; }
+.fs-90      { font-size: .90rem; }
+.fs-85      { font-size: .85rem; }
+
+.mb-6 { margin-bottom: 1.5rem; }
+.mt-2 { margin-top: .5rem; }
+
+.grid { display: grid; gap: 1rem; }
+.grid-3 { grid-template-columns: 1fr; }
+@media (min-width: 768px) { .grid-3 { grid-template-columns: repeat(3, 1fr); } }
+
+
+/* =======================================================
+   8) COMPONENTES REUTILIZABLES (para Dashboard y futuras vistas)
+   ======================================================= */
+
+/* Encabezado de página */
+.page-header__title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #fff;
+}
+.page-header__subtitle {
+  color: var(--muted-color);
+  font-size: .95rem;
+}
+
+/* Tarjeta */
+.card {
+  background: var(--surface);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  padding: 1rem;
+}
+
+/* KPIs */
+.kpi__title { color: var(--muted-color); font-size: .9rem; }
+.kpi__value { font-size: 1.5rem; font-weight: 800; }
+.kpi__value--pos { color: var(--success); }
+.kpi__value--neg { color: var(--rose-600); }
+
+/* Botones genéricos */
+.btn {
+  display: inline-block;
+  padding: .55rem .9rem;
+  border-radius: 10px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: transform .06s ease, opacity .15s ease;
+  border: none;
+  cursor: pointer;
+}
+.btn:active { transform: translateY(1px); }
+.btn--primary {
+  color: #fff;
+  background: linear-gradient(90deg, var(--accent-2-color), var(--accent-color));
+}
+.btn--dark { color: #fff; background: #111827; }
+.btn--ghost { color: var(--accent-2-color); background: transparent; }
+.btn--primary:hover,
+.btn--dark:hover { opacity: .9; }
+
+/* Encabezado de bloque (título + acciones) */
+.block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .75rem;
+}
+.block-head__title { font-weight: 700; font-size: 1.05rem; color: var(--text-color); }
+.block-head__actions { display: flex; gap: .5rem; }
+
+/* Barra de progreso (metas) */
+.progress {
+  width: 100%;
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.progress__bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-2-color), var(--accent-color));
+  width: 0%;
+}
+
+/* Badges ingreso/gasto */
+.badge {
+  display: inline-block;
+  padding: .2rem .5rem;
+  font-size: .75rem;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.badge--income { background: #d1fae5; color: #065f46; }
+.badge--expense { background: #ffe4e6; color: #9f1239; }
+
+/* Tabla */
+.table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+.table thead th {
+  text-align: left;
+  color: var(--muted-color);
+  font-weight: 600;
+  padding: .65rem .75rem;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--surface-2);
+}
+.table tbody td {
+  padding: .7rem .75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+.table__num { text-align: right; font-weight: 600; }
+
+
+/* =======================================================
+   9) DASHBOARD (ajustes de página)
+   ======================================================= */
+
+/* Fondo un poco más claro SOLO cuando el body tenga esta clase */
+body.page-dashboard{
+  --bg-color: #9fa9b5;   /* gris muy claro */
+  --text-color: #0f1724; /* texto más oscuro para mejor legibilidad */
+  --muted-color: #203a67;/* gris medio para subtítulos en esta página */
+}
+
+/* (Si deseas más tweaks solo para dashboard, añádelos aquí) */
+
+
+/* =======================================================
+   10) FOOTER (placeholder si luego lo necesitas)
+   ======================================================= */
+/* footer { ... } */

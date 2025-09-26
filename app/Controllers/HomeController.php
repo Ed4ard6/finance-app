@@ -2,24 +2,22 @@
 namespace App\Controllers;
 
 use App\Core\Controller;
-use App\Core\Database;
-use App\Core\Auth;   // ⬅️ Importa el middleware
 
 class HomeController extends Controller
 {
-    public function index(): void
+    /** GET / */
+    public function index()
     {
-        // Protege el dashboard: si no hay sesión -> redirige a /login
-        Auth::requireLogin();
+        if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 
-        // Ejemplo: prueba de conexión (opcional)
-        $pdo  = Database::connection();
-        $stmt = $pdo->query('SELECT NOW() as ahora');
-        $row  = $stmt->fetch();
+        // Si está autenticado → directo al Dashboard
+        if (!empty($_SESSION['user_id'])) {
+            header('Location: /dashboard');
+            exit;
+        }
 
-        $this->view('dashboard/index', [
-            'titulo' => 'Panel de Finanzas',
-            'ahora'  => $row['ahora'] ?? null,
-        ]);
+        // Si NO está autenticado → muestra landing pública
+        // Ajusta la ruta si tu vista está en otra carpeta/nombre.
+        require __DIR__ . '/../Views/home/index.php';
     }
 }
