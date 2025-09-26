@@ -31,12 +31,13 @@ function is_active($path, $current)
   <link rel="stylesheet" href="<?= $baseUrl ?>/assets/css/styles.css">
   <link rel="icon" type="image/png" href="<?= $baseUrl ?>/assets/img/favicon.png">
   <style>
-    /* ====== Header y nav ====== */
+    /* ====== Header y nav (base) ====== */
     .main-header { position: sticky; top: 0; z-index: 1000; background: #0b1320; border-bottom: 1px solid #1f2937; }
     .main-header .wrap { max-width: 1200px; margin: 0 auto; padding: .75rem 1rem; display: flex; align-items: center; gap: .75rem; }
     .main-header .logo h2 { margin: 0; color: #a78bfa; text-decoration: none; }
     .main-header .spacer { flex: 1; }
 
+    /* Menú horizontal (desktop) */
     .nav{ position: relative; display:flex; align-items:center; gap:.25rem; overflow-x:auto; overflow-y:visible; white-space:nowrap; scrollbar-width:none; -ms-overflow-style:none; }
     .nav::-webkit-scrollbar{ display:none; }
 
@@ -45,21 +46,71 @@ function is_active($path, $current)
     .nav a.active{ background:#1f2937; color:#fff; border-color:#334155; }
     .nav a, .summary-like{ word-break:keep-all; }
 
-    /* Dropdown fijo (posicionado por JS) */
+    /* Dropdown fijo (desktop) */
     .dropdown-fixed{ position:fixed; min-width:240px; background:#0b1220; border:1px solid #1f2937; border-radius:.5rem; padding:.35rem; box-shadow:0 10px 20px rgba(0,0,0,.35); display:none; z-index:2000; }
     .dropdown-fixed.show{ display:block !important; }
     .dropdown-fixed a{ display:flex; padding:.5rem .6rem; border-radius:.4rem; color:#cbd5e1; text-decoration:none; }
     .dropdown-fixed a:hover{ background:#111827; color:#fff; }
 
-    /* botón logout */
+    /* Botones */
     .btn-icon{ display:inline-flex; align-items:center; justify-content:center; width:36px; height:36px; border-radius:.5rem; color:#e5e7eb; border:1px solid #334155; background:#0b1220; text-decoration:none; }
     .btn-icon:hover{ background:#111827; }
+
+    /* ====== Responsive ====== */
+    /* Oculta la hamburguesa en desktop */
+    .btn-burger{ display:none; }
+
+    @media (max-width: 900px){
+      /* NOTE: en móvil mostramos hamburguesa y colapsamos el menú */
+      .btn-burger{ display:inline-flex; }
+      .main-header .wrap{ gap:.5rem; }
+
+      /* El nav pasa a vertical y colapsable */
+      .nav{
+        position: fixed;
+        left: 0; right: 0;
+        top: calc(56px + env(safe-area-inset-top));
+        background:#0b1220;
+        border-bottom: 1px solid #1f2937;
+        padding: .5rem .75rem;
+        display: none;            /* cerrado por defecto */
+        flex-direction: column;
+        align-items: stretch;
+        gap:.35rem;
+        white-space: normal;
+      }
+      .nav.open{ display:flex; }   /* abierto */
+
+      .nav a, .summary-like{
+        width: 100%;
+        padding: .7rem .8rem;
+        border: 1px solid transparent;
+      }
+
+      /* Quita el espacio del medio cuando el menú es vertical */
+      .main-header .spacer{ display:none; }
+
+      /* Dropdown en móvil: se vuelve un bloque estático dentro del flujo */
+      .dropdown-fixed{
+        position: static;
+        width: 100%;
+        min-width: 0;
+        margin-top: .25rem;
+        display: none;
+        box-shadow: none;
+      }
+      .dropdown-fixed.show{ display:block !important; }
+      .dropdown-fixed a{ padding:.55rem .65rem; }
+    }
   </style>
 </head>
 
 <body class="<?= $pageClass ?? '' ?>">
   <header class="main-header">
     <div class="wrap">
+      <!-- Hamburguesa (solo se ve en móvil) -->
+      <button id="btn-nav" class="btn-icon btn-burger" aria-controls="main-nav" aria-expanded="false" aria-label="Abrir menú">☰</button>
+
       <div class="logo">
         <!-- Logo → /dashboard -->
         <a href="<?= $baseUrl ?>/dashboard" style="text-decoration:none;">
@@ -67,7 +118,8 @@ function is_active($path, $current)
         </a>
       </div>
 
-      <nav class="nav">
+      <!-- Menú principal -->
+      <nav id="main-nav" class="nav" aria-label="Principal">
         <?php if (!$user): ?>
           <a class="<?= is_active($baseUrl . '/login', $baseUrl . $currentPath) ?>" href="<?= $baseUrl ?>/login">Iniciar sesión</a>
           <a class="<?= is_active($baseUrl . '/register', $baseUrl . $currentPath) ?>" href="<?= $baseUrl ?>/register">Registrarse</a>
@@ -80,6 +132,8 @@ function is_active($path, $current)
           <a class="<?= is_active('/rules', $currentPath) ?>" href="<?= $baseUrl ?>/rules">Reglas</a>
           <a class="<?= is_active('/savings', $currentPath) ?>" href="<?= $baseUrl ?>/savings">Ahorros</a>
           <a class="<?= is_active('/debts', $currentPath) ?>" href="<?= $baseUrl ?>/debts">Deudas</a>
+
+          <!-- Botón Reportes: en desktop abre dropdown flotante; en móvil muestra bloque dentro del flujo -->
           <button id="btn-reports" class="summary-like" aria-haspopup="true" aria-expanded="false">Reportes ▾</button>
         <?php endif; ?>
       </nav>
@@ -92,7 +146,7 @@ function is_active($path, $current)
     </div>
   </header>
 
-  <!-- Panel del dropdown (fuera del nav para evitar clipping) -->
+  <!-- Panel del dropdown (se adapta según media query) -->
   <div id="menu-reports" class="dropdown-fixed" role="menu" aria-labelledby="btn-reports">
     <a class="<?= is_active('/debts/compare', $currentPath) ?>" href="<?= $baseUrl ?>/debts/compare" role="menuitem">Comparador de deudas (Bola de nieve / Avalancha)</a>
     <a class="<?= is_active('/reports/waterfall', $currentPath) ?>" href="<?= $baseUrl ?>/reports/waterfall" role="menuitem">Cascada del mes</a>
@@ -103,13 +157,46 @@ function is_active($path, $current)
 
   <main class="container">
     <script>
-      // Dropdown robusto (posicionado en fixed)
+      // ====== Menú hamburguesa (abre/cierra el nav en móvil) ======
+      (function() {
+        const navBtn = document.getElementById('btn-nav');
+        const nav    = document.getElementById('main-nav');
+        if (!navBtn || !nav) return;
+
+        function isMobile(){ return window.matchMedia('(max-width: 900px)').matches; }
+
+        function toggleNav(force){
+          const willOpen = force !== undefined ? force : !nav.classList.contains('open');
+          nav.classList.toggle('open', willOpen);
+          navBtn.setAttribute('aria-expanded', String(willOpen));
+        }
+
+        navBtn.addEventListener('click', (e)=>{ e.preventDefault(); toggleNav(); });
+
+        // Cierra el nav cuando cambie el viewport (evita quedarse abierto al rotar)
+        window.addEventListener('resize', () => {
+          if (!isMobile()) { nav.classList.remove('open'); navBtn.setAttribute('aria-expanded','false'); }
+        });
+
+        // Cierra al hacer click fuera en móvil
+        document.addEventListener('click', (e)=>{
+          if (!isMobile()) return;
+          if (!nav.contains(e.target) && !navBtn.contains(e.target)) {
+            nav.classList.remove('open'); navBtn.setAttribute('aria-expanded','false');
+          }
+        });
+      })();
+
+      // ====== Dropdown Reportes (desktop: flotante; móvil: bloque) ======
       (function() {
         const btn  = document.getElementById('btn-reports');
         const menu = document.getElementById('menu-reports');
+        const nav  = document.getElementById('main-nav');
         if (!btn || !menu) return;
 
-        function place() {
+        function isMobile(){ return window.matchMedia('(max-width: 900px)').matches; }
+
+        function placeDesktop() {
           const r = btn.getBoundingClientRect();
           const menuW = Math.max(menu.offsetWidth, 240);
           let left = r.left;
@@ -119,13 +206,36 @@ function is_active($path, $current)
           menu.style.left = left + 'px';
           menu.style.top  = top  + 'px';
         }
-        function open(){ place(); menu.classList.add('show'); btn.setAttribute('aria-expanded','true'); }
-        function close(){ menu.classList.remove('show'); btn.setAttribute('aria-expanded','false'); }
 
-        btn.addEventListener('click', (e)=>{ e.preventDefault(); menu.classList.contains('show') ? close() : open(); });
-        document.addEventListener('click', (e)=>{ if (!menu.contains(e.target) && !btn.contains(e.target)) close(); });
-        document.addEventListener('keydown', (e)=>{ if (e.key==='Escape') close(); });
-        window.addEventListener('resize', close);
-        window.addEventListener('scroll', close, true);
+        function openMenu(){
+          if (!isMobile()) { placeDesktop(); }
+          menu.classList.add('show');
+          btn.setAttribute('aria-expanded','true');
+        }
+        function closeMenu(){
+          menu.classList.remove('show');
+          btn.setAttribute('aria-expanded','false');
+        }
+
+        btn.addEventListener('click', (e)=>{
+          e.preventDefault();
+          const open = menu.classList.contains('show');
+          if (open) { closeMenu(); return; }
+          // En móvil, aseguramos que el nav esté visible
+          if (isMobile() && nav && !nav.classList.contains('open')) {
+            nav.classList.add('open');
+            const navBtn = document.getElementById('btn-nav');
+            if (navBtn) navBtn.setAttribute('aria-expanded','true');
+          }
+          openMenu();
+        });
+
+        document.addEventListener('click', (e)=>{
+          if (btn.contains(e.target) || menu.contains(e.target)) return;
+          closeMenu();
+        });
+        document.addEventListener('keydown', (e)=>{ if (e.key==='Escape') closeMenu(); });
+        window.addEventListener('resize', closeMenu);
+        window.addEventListener('scroll', closeMenu, true);
       })();
     </script>

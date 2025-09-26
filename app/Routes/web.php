@@ -12,14 +12,20 @@ $router->post('/login',     [AuthController::class, 'login']);
 $router->get('/register',   [AuthController::class, 'showRegister']);
 $router->post('/register',  [AuthController::class, 'register']);
 
-// Logout: acepta GET y POST
+// Logout (GET/POST)
 $router->get('/logout',     [AuthController::class, 'logout']);
 $router->post('/logout',    [AuthController::class, 'logout']);
 
 // Protegidas
 $router->get('/dashboard', function () {
+    (new Auth)(); // middleware
+    (new DashboardController)->index();        // Panel general con datos reales
+});
+
+// NUEVO: endpoint para crear/actualizar salario del mes
+$router->post('/dashboard/salary', function () {
     (new Auth)();
-    (new DashboardController)->index(); // Panel general
+    (new DashboardController)->upsertSalary();
 });
 
 // Transacciones
