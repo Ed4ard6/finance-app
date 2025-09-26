@@ -65,14 +65,14 @@ class AuthController extends Controller
                 $pdo = Database::connection();
 
                 // Verificar duplicado
-                $check = $pdo->prepare("SELECT id FROM usuarios WHERE email = :e");
+                $check = $pdo->prepare("SELECT id FROM users WHERE email = :e");
                 $check->execute([':e' => $email]);
 
                 if ($check->fetch()) {
                     $errores[] = "El correo ya está registrado.";
                 } else {
                     $stmt = $pdo->prepare(
-                        "INSERT INTO usuarios (nombre, email, password_hash)
+                        "INSERT INTO users (nombre, email, password_hash)
                          VALUES (:n, :e, :p)"
                     );
                     $stmt->execute([
@@ -137,7 +137,7 @@ class AuthController extends Controller
             try {
                 $pdo = Database::connection();
 
-                $stmt = $pdo->prepare("SELECT * FROM usuarios WHERE email = :e");
+                $stmt = $pdo->prepare("SELECT * FROM users WHERE email = :e");
                 $stmt->execute([':e' => $email]);
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
