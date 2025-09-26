@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Controllers;
 
 use App\Core\Controller;
@@ -12,7 +13,7 @@ class AuthController extends Controller
     public function showRegister()
     {
         $errores = [];
-        $success = null;
+        $success = null; // el modal vive en /login
         $nombre  = null;
         $email   = null;
 
@@ -38,14 +39,17 @@ class AuthController extends Controller
             try {
                 $pdo = Database::connection();
 
-                // Verificar que no exista el email antes
+                // Verificar duplicado
                 $check = $pdo->prepare("SELECT id FROM usuarios WHERE email = :e");
                 $check->execute([':e' => $email]);
+
                 if ($check->fetch()) {
                     $errores[] = "El correo ya está registrado.";
                 } else {
+                    // --- INSERT REAL (descomenta para insertar) ---
+                    /*
                     $stmt = $pdo->prepare(
-                        "INSERT INTO usuarios (nombre, email, password_hash) 
+                        "INSERT INTO usuarios (nombre, email, password_hash)
                          VALUES (:n, :e, :p)"
                     );
                     $stmt->execute([
@@ -53,8 +57,16 @@ class AuthController extends Controller
                         ':e' => $email,
                         ':p' => password_hash($_POST['password'], PASSWORD_BCRYPT),
                     ]);
+                    */
 
-                    $success = "✅ Usuario registrado con éxito.";
+                    // PRG + Flash
+                    if (session_status() === PHP_SESSION_NONE) {
+                        session_start();
+                    }
+                    $_SESSION['success'] = "✅ Usuario registrado con éxito.";
+
+                    header('Location: /login'); // GET /login
+                    exit;
                 }
             } catch (\PDOException $e) {
                 $errores[] = "Error al registrar el usuario: " . $e->getMessage();
@@ -67,6 +79,7 @@ class AuthController extends Controller
             }
         }
 
+        // Errores: re-mostramos el formulario
         require __DIR__ . '/../Views/auth/register.php';
     }
 
@@ -76,6 +89,23 @@ class AuthController extends Controller
         $errores = [];
         $success = null;
         $email   = null;
+
+        // Levantar flash desde el registro
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+        if (!empty($_SESSION['success'])) {
+            $success = $_SESSION['success'];
+            unset($_SESSION['success']); // flash: una sola vez
+        }
+        // Solo para cuando el usuario vuelve "atrás" desde el registro
+        elseif (isset($_GET['from']) && $_GET['from'] === 'register') {
+            $success = "✅ Usuario registrado con éxito.";
+            $email   = null; // evita que quede poblado
+        }
+
+        // Evitar BFCache
+        header('Cache-Control: no-store, no-cache, must-revalidate');
 
         require __DIR__ . '/../Views/auth/login.php';
     }
@@ -103,14 +133,12 @@ class AuthController extends Controller
                 if (!$user || !password_verify($_POST['password'], $user['password_hash'])) {
                     $errores[] = "Credenciales incorrectas.";
                 } else {
-                    // Iniciar sesión
                     if (session_status() === PHP_SESSION_NONE) {
                         session_start();
                     }
                     $_SESSION['user_id']   = $user['id'];
                     $_SESSION['user_name'] = $user['nombre'];
 
-                    // Redirigir al dashboard
                     header('Location: /dashboard');
                     exit;
                 }

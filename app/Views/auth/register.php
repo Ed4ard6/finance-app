@@ -1,34 +1,40 @@
 <?php require __DIR__ . '/../layouts/header.php'; ?>
 
 <div class="auth-container">
-  <h1>Registro</h1>
+  <h1 class="text-2xl font-bold mb-4">Registro</h1>
 
   <?php if (!empty($errores)): ?>
-    <div class="error-box">
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
       <?php foreach ($errores as $e): ?>
         <p><?= htmlspecialchars($e) ?></p>
       <?php endforeach; ?>
     </div>
   <?php endif; ?>
 
-  <?php if (!empty($success)): ?>
-    <div class="success-box">
-      <p><?= htmlspecialchars($success) ?></p>
-    </div>
-  <?php endif; ?>
-
   <form method="POST" action="/register" class="space-y-4">
     <input type="text" name="nombre" placeholder="Nombre completo"
-           value="<?= htmlspecialchars($nombre ?? '') ?>" class="input">
+           value="<?= htmlspecialchars($nombre ?? '') ?>"
+           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-400">
+
     <input type="email" name="email" placeholder="Correo electrónico"
-           value="<?= htmlspecialchars($email ?? '') ?>" class="input">
-    <input type="password" name="password" placeholder="Contraseña" class="input">
-    <input type="password" name="confirm" placeholder="Confirmar contraseña" class="input">
-    <button type="submit" class="btn-primary">Registrarme</button>
+           value="<?= htmlspecialchars($email ?? '') ?>"
+           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-400">
+
+    <input type="password" name="password" placeholder="Contraseña"
+           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-400">
+
+    <input type="password" name="confirm" placeholder="Confirmar contraseña"
+           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-400">
+
+    <button type="submit"
+            class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 text-white font-bold py-2 px-4 rounded">
+      Registrarme
+    </button>
   </form>
 
-  <p class="switch-auth">
-    ¿Ya tienes cuenta? <a href="/login">Inicia sesión</a>
+  <p class="switch-auth mt-4 text-sm text-gray-400">
+    ¿Ya tienes cuenta?
+    <a href="/login" class="text-blue-400 hover:underline">Inicia sesión</a>
   </p>
 </div>
 
