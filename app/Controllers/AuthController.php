@@ -46,8 +46,8 @@ class AuthController extends Controller
                 if ($check->fetch()) {
                     $errores[] = "El correo ya está registrado.";
                 } else {
-                    // --- INSERT REAL (descomenta para insertar) ---
-                    /*
+                    /* // --- INSERT REAL (descomenta para insertar) ---
+                    
                     $stmt = $pdo->prepare(
                         "INSERT INTO usuarios (nombre, email, password_hash)
                          VALUES (:n, :e, :p)"
@@ -56,8 +56,7 @@ class AuthController extends Controller
                         ':n' => $nombre,
                         ':e' => $email,
                         ':p' => password_hash($_POST['password'], PASSWORD_BCRYPT),
-                    ]);
-                    */
+                    ]); */
 
                     // PRG + Flash
                     if (session_status() === PHP_SESSION_NONE) {
@@ -100,7 +99,7 @@ class AuthController extends Controller
         }
         // Solo para cuando el usuario vuelve "atrás" desde el registro
         elseif (isset($_GET['from']) && $_GET['from'] === 'register') {
-            $success = "✅ Usuario registrado con éxito.";
+            $success = "✅ inicio de secion exitoso, bienvenido.";
             $email   = null; // evita que quede poblado
         }
 

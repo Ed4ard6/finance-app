@@ -1,21 +1,23 @@
 <?php
-use App\Core\Router;
+
 use App\Controllers\HomeController;
 use App\Controllers\AuthController;
+use App\Controllers\DashboardController;
+use App\Middleware\Auth;
 
-$router = new Router();
+// Públicas
+$router->get('/',           [HomeController::class, 'index']);
+$router->get('/login',      [AuthController::class, 'showLogin']);
+$router->post('/login',     [AuthController::class, 'login']);
+$router->get('/register',   [AuthController::class, 'showRegister']);
+$router->post('/register',  [AuthController::class, 'register']);
 
-/** Landing pública */
-$router->get('/', [HomeController::class, 'index']);
+// Logout: acepta GET y POST
+$router->get('/logout',     [AuthController::class, 'logout']);
+$router->post('/logout',    [AuthController::class, 'logout']);
 
-/** Dashboard (protegido) */
-$router->get('/dashboard', [HomeController::class, 'dashboard']);
-
-/** Autenticación */
-$router->get('/login',    [AuthController::class, 'showLogin']);
-$router->post('/login',   [AuthController::class, 'login']);
-$router->get('/register', [AuthController::class, 'showRegister']);
-$router->post('/register',[AuthController::class, 'register']);
-$router->get('/logout',   [AuthController::class, 'logout']);
-
-return $router;
+// Protegida
+$router->get('/dashboard', function () {
+    (new Auth)();
+    (new DashboardController)->index();
+});

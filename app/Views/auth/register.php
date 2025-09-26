@@ -11,20 +11,20 @@
     </div>
   <?php endif; ?>
 
-  <form method="POST" action="/register" class="space-y-4">
-    <input type="text" name="nombre" placeholder="Nombre completo"
+  <form method="POST" action="/register" class="space-y-4" autocomplete="off">
+    <input type="text" name="nombre" placeholder="Nombre"
            value="<?= htmlspecialchars($nombre ?? '') ?>"
-           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-400">
+           class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300">
 
     <input type="email" name="email" placeholder="Correo electrónico"
            value="<?= htmlspecialchars($email ?? '') ?>"
-           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-400">
+           class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300">
 
     <input type="password" name="password" placeholder="Contraseña"
-           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-400">
+           class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300">
 
     <input type="password" name="confirm" placeholder="Confirmar contraseña"
-           class="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:border-blue-400">
+           class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-300">
 
     <button type="submit"
             class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:opacity-90 text-white font-bold py-2 px-4 rounded">
@@ -32,9 +32,8 @@
     </button>
   </form>
 
-  <p class="switch-auth mt-4 text-sm text-gray-400">
-    ¿Ya tienes cuenta?
-    <a href="/login" class="text-blue-400 hover:underline">Inicia sesión</a>
+  <p class="switch-auth mt-4 text-sm text-gray-600">
+    ¿Ya tienes cuenta? <a href="/login" class="text-blue-600 hover:underline">Inicia sesión</a>
   </p>
 </div>
 
