@@ -1,12 +1,15 @@
 <?php
 use App\Core\Router;
 use App\Controllers\HomeController;
-use App\Controllers\AuthController;  // ⬅️ Rutas de autenticación
+use App\Controllers\AuthController;
 
 $router = new Router();
 
-/** Dashboard (protegido) */
+/** Landing pública */
 $router->get('/', [HomeController::class, 'index']);
+
+/** Dashboard (protegido) */
+$router->get('/dashboard', [HomeController::class, 'dashboard']);
 
 /** Autenticación */
 $router->get('/login',    [AuthController::class, 'showLogin']);

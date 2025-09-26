@@ -3,16 +3,23 @@ namespace App\Controllers;
 
 use App\Core\Controller;
 use App\Core\Database;
-use App\Core\Auth;   // ⬅️ Importa el middleware
+use App\Core\Auth;
 
 class HomeController extends Controller
 {
+    // Landing pública
     public function index(): void
     {
-        // Protege el dashboard: si no hay sesión -> redirige a /login
+        $this->view('home/index', [
+            'titulo' => 'Finanzas - Inicio',
+        ]);
+    }
+
+    // Dashboard (requiere login)
+    public function dashboard(): void
+    {
         Auth::requireLogin();
 
-        // Ejemplo: prueba de conexión (opcional)
         $pdo  = Database::connection();
         $stmt = $pdo->query('SELECT NOW() as ahora');
         $row  = $stmt->fetch();

@@ -1,0 +1,191 @@
+/* ====== VARIABLES (heredadas de tu portafolio) ====== */
+:root {
+    --bg-color: #0f1724;
+    --card-bg: #0b1220;
+    --text-color: #e6eef8;
+    --muted-color: #94a3b8;
+    --accent-color: #7c3aed;
+    --accent-2-color: #2563eb;
+    --form-bg-opacity: rgba(255, 255, 255, 0.05);
+    --border-color: rgba(255, 255, 255, 0.08);
+    --radius: 10px;
+}
+
+/* Tema claro opcional */
+body.light-theme {
+    --bg-color: #f1f5f9;
+    --card-bg: #e2e8f0;
+    --text-color: #0f1724;
+    --muted-color: #475569;
+    --accent-color: #4f46e5;
+    --accent-2-color: #6366f1;
+    --form-bg-opacity: rgba(0, 0, 0, 0.05);
+    --border-color: rgba(0, 0, 0, 0.08);
+}
+
+/* ====== RESETEO ====== */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    background: var(--bg-color);
+    color: var(--text-color);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+}
+
+/* ====== LAYOUT GENERAL ====== */
+main.container {
+    flex-grow: 1;
+    padding: 20px;
+}
+
+/* ====== TARJETAS (usadas para Login/Register) ====== */
+.auth-container {
+    max-width: 400px;
+    margin: 80px auto;
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: var(--radius);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    border: 1px solid var(--border-color);
+}
+
+.auth-container h1 {
+    margin-bottom: 20px;
+    color: var(--accent-color);
+    text-align: center;
+}
+
+/* Inputs */
+.auth-container input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    background: var(--form-bg-opacity);
+    color: var(--text-color);
+}
+
+.auth-container input::placeholder {
+    color: var(--muted-color);
+}
+
+/* Botón principal */
+.auth-container button {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(90deg, var(--accent-2-color), var(--accent-color));
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.auth-container button:hover {
+    transform: scale(1.03);
+}
+
+/* Links de cambio */
+.switch-auth {
+    text-align: center;
+    margin-top: 15px;
+    color: var(--muted-color);
+}
+
+.switch-auth a {
+    color: var(--accent-2-color);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.switch-auth a:hover {
+    text-decoration: underline;
+}
+
+/* Mensajes de error */
+.error-box {
+    background: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    padding: 10px;
+    border-radius: var(--radius);
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+/* ====== LANDING (Dashboard index público) ====== */
+.landing {
+    max-width: 800px;
+    margin: 100px auto;
+    text-align: center;
+    padding: 20px;
+}
+
+.landing h1 {
+    font-size: 2.5rem;
+    color: var(--accent-2-color);
+    margin-bottom: 15px;
+}
+
+.landing p {
+    color: var(--muted-color);
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+}
+
+.landing .btn {
+    display: inline-block;
+    margin: 0 10px;
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    background: linear-gradient(90deg, var(--accent-2-color), var(--accent-color));
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    transition: transform 0.3s ease;
+}
+
+.landing .btn:hover {
+    transform: scale(1.05);
+}
+/* ====== FOOTER ====== */
+
+/* ===== HEADER ====== */
+
+header.main-header {
+    width: 100%;
+    padding: 10px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border-color);
+    height: 70px;
+}
+
+header .logo h2 {
+    color: var(--accent-color);
+    margin: 0;
+}
+
+header .nav a {
+    color: var(--muted-color);
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 20px;
+    transition: color 0.3s ease;
+}
+
+header .nav a:hover {
+    color: var(--text-color);
+}
