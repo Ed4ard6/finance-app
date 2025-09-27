@@ -167,7 +167,8 @@ $w = fn($m,$t)=> max(2,min(100,round(($m/max(1,$t))*100)));
       <div class="muted">Gastos (mes)</div>
       <div class="negative">COP <?= number_format($gastos_mes, 0, ',', '.') ?></div>
       <div class="row" style="margin-top:12px;">
-        <a class="btn btn-primary" href="<?= $baseUrl ?>/transactions">Agregar gasto</a>
+        <!-- 👇 CAMBIO AQUÍ -->
+        <a class="btn btn-primary" href="<?= $baseUrl ?>/transactions/create?type=expense">Agregar gasto</a>
         <form action="<?= $baseUrl ?>/rules/generate" method="POST">
           <button class="btn" type="submit">Generar desde reglas</button>
         </form>

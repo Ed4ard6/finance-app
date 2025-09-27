@@ -5,6 +5,7 @@ use App\Controllers\AuthController;
 use App\Controllers\DashboardController;
 use App\Controllers\TransactionsController;
 use App\Controllers\RulesController;
+use App\Controllers\CategoriesController;
 use App\Middleware\Auth;
 
 // ===== Públicas
@@ -19,37 +20,55 @@ $router->post('/logout',    [AuthController::class, 'logout']);
 // ===== Protegidas (vistas GET)
 $router->get('/dashboard', function () {
     (new Auth)();
-    (new DashboardController)->index(); // Panel general
+    (new DashboardController)->index();
 });
 
 $router->get('/transactions', function () {
     (new Auth)();
-    // Si tienes un controlador para listar, úsalo.
-    // (new TransactionsController)->index();
-    require BASE_PATH . '/app/Views/transactions/index.php';
+    (new TransactionsController)->index();
+});
+$router->get('/transactions/create', function () {
+    (new Auth)();
+    (new TransactionsController)->create();
+});
+$router->get('/transactions/edit', function () {
+    (new Auth)();
+    (new TransactionsController)->edit();  // ?id=123
 });
 
+// Estos aún no usan controlador (no modificados)
 $router->get('/budgets', function () {
     (new Auth)();
     require BASE_PATH . '/app/Views/budgets/index.php';
 });
-
 $router->get('/rules', function () {
     (new Auth)();
     require BASE_PATH . '/app/Views/rules/index.php';
 });
-
 $router->get('/savings', function () {
     (new Auth)();
     require BASE_PATH . '/app/Views/savings/index.php';
 });
-
 $router->get('/debts', function () {
     (new Auth)();
     require BASE_PATH . '/app/Views/debts/index.php';
 });
 
-// Atajos de reportes que usa el header / dashboard
+// ===== CATEGORÍAS (vistas GET) ———— LIMPIAS Y SIN DUPLICADOS ————
+$router->get('/categories', function () {
+    (new Auth)();
+    (new CategoriesController)->index();
+});
+$router->get('/categories/create', function () {
+    (new Auth)();
+    (new CategoriesController)->create();
+});
+$router->get('/categories/edit', function () {
+    (new Auth)();
+    (new CategoriesController)->edit(); // espera ?id=123
+});
+
+// ===== Reportes (atajos)
 $router->get('/debts/compare', function () {
     (new Auth)();
     $titulo = 'Comparador de deudas'; $pageClass='page-debt-compare';
@@ -72,18 +91,48 @@ $router->get('/reports/monthly', function () {
     require BASE_PATH . '/app/Views/reports/mensual.php';
 });
 
-// ===== Acciones POST (persistencia)
+// ===== Acciones POST
 $router->post('/settings/salary', function () {
     (new Auth)();
-    (new DashboardController)->saveSalary(); // guarda salario fijo (tabla salaries) y redirige
+    (new DashboardController)->saveSalary();
 });
 
 $router->post('/transactions', function () {
     (new Auth)();
-    (new TransactionsController)->store(); // crea gasto/ingreso/ahorro/deuda
+    (new TransactionsController)->store();
+});
+$router->post('/transactions/update', function () {
+    (new Auth)();
+    (new TransactionsController)->update();
+});
+$router->post('/transactions/delete', function () {
+    (new Auth)();
+    (new TransactionsController)->destroy();
 });
 
 $router->post('/rules/generate', function () {
     (new Auth)();
-    (new RulesController)->generate(); // placeholder
+    (new RulesController)->generate();
 });
+
+// ===== Categorías POST (persistencia)
+$router->post('/categories', function () {
+    (new Auth)();
+    (new CategoriesController)->store();
+});
+$router->post('/categories/update', function () {
+    (new Auth)();
+    (new CategoriesController)->update();
+});
+
+/*
+ * Eliminado (comentado) por duplicado:
+ *
+ * // $router->get('/categories', ...);
+ * // $router->get('/categories/create', ...);
+ * // $router->post('/categories', ...);
+ * // $router->get('/categories/edit', ...);
+ * // $router->post('/categories/update', ...);
+ *
+ * Ya están definidos arriba, una sola vez.
+ */
