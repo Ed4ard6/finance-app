@@ -96,6 +96,8 @@ td.actions{white-space:nowrap}
 /* Mes rápido */
 .monthbox{position:relative}
 .monthbox .ic{position:absolute;right:10px;top:50%;transform:translateY(-50%);opacity:.9;cursor:pointer}
+/* Hacer el input completo clickable */
+.monthbox input#f-ym{cursor:pointer}
 
 /* Rango */
 .quick-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
@@ -592,6 +594,18 @@ function renderMP(){
     mpGrid.appendChild(b);
   });
 }
+// CLIC EN TODO EL INPUT, FOCUS Y ACCESIBILIDAD PARA ABRIR EL SELECTOR DE MESES
+ymInput.addEventListener('click', () => showMP(ymInput));
+ymInput.addEventListener('focus', () => showMP(ymInput));
+ymInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === 'ArrowDown' || e.key === ' ') {
+    e.preventDefault();
+    showMP(ymInput);
+  }
+});
+// Icono también abre el selector
+if (ymIc) ymIc.addEventListener('click', () => showMP(ymInput));
+
 document.addEventListener('click', (e)=>{
   if (!mp.contains(e.target) && e.target!==ymInput && e.target!==ymIc) {
     if (mp.style.display==='block') hideMP();

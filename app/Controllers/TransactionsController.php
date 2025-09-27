@@ -15,11 +15,9 @@ class TransactionsController extends Controller
         $pdo = Database::connection();
 
         // --------- Entrada de filtros ---------
-        // Mes rápido (YYYY-MM)
         $ym   = $_GET['ym']   ?? date('Y-m');
-        $view = $_GET['view'] ?? 'all'; // all | expense | income
+        $view = $_GET['view'] ?? 'all';
 
-        // Rango (dd/mm/yyyy); si llega completo, IGNORA $ym
         $fromStr = $_GET['from'] ?? '';
         $toStr   = $_GET['to']   ?? '';
 
@@ -29,22 +27,17 @@ class TransactionsController extends Controller
             $to   = $this->dmyToYmd($toStr);
         }
 
-        // Construcción base de fechas
         if ($from && $to) {
             $start = $from;
-            // fin exclusivo (+1 día)
-            $toDate = new \DateTime($to);
-            $toDate->modify('+1 day');
+            $toDate = new \DateTime($to); $toDate->modify('+1 day');
             $end = $toDate->format('Y-m-d');
         } else {
-            // mes rápido
             if (!preg_match('/^\d{4}-\d{2}$/', $ym)) $ym = date('Y-m');
             [$y, $m] = explode('-', $ym);
             $start = sprintf('%04d-%02d-01', (int)$y, (int)$m);
             $end   = date('Y-m-d', strtotime("$start +1 month"));
         }
 
-        // Filtro de tipo
         $where  = 't.user_id = :uid AND t.date_at >= :start AND t.date_at < :end AND t.status = 1';
         $params = [':uid'=>$userId, ':start'=>$start, ':end'=>$end];
 
@@ -54,7 +47,6 @@ class TransactionsController extends Controller
             $where .= " AND c.kind = 'income'";
         }
 
-        // Filtros por categorías (por tipo), llegan como CSV de IDs
         $catExpense = $this->csvToArray($_GET['cat_expense'] ?? '');
         $catDebt    = $this->csvToArray($_GET['cat_debt']    ?? '');
         $catSaving  = $this->csvToArray($_GET['cat_saving']  ?? '');
@@ -62,17 +54,13 @@ class TransactionsController extends Controller
 
         $catAll = array_merge($catExpense, $catDebt, $catSaving, $catIncome);
         if ($catAll) {
-            // Aplica IN por category_id
             $placeholders = [];
             foreach ($catAll as $i => $id) {
-                $ph = ":cat$i";
-                $placeholders[] = $ph;
-                $params[$ph] = (int)$id;
+                $ph = ":cat$i"; $placeholders[] = $ph; $params[$ph] = (int)$id;
             }
             $where .= " AND t.category_id IN (".implode(',', $placeholders).")";
         }
 
-        // Consulta (orden más reciente primero)
         $sql = "
             SELECT t.id, t.date_at, t.amount, t.description,
                    c.id AS category_id, c.name AS category_name, c.kind AS category_kind
@@ -81,8 +69,7 @@ class TransactionsController extends Controller
             WHERE $where
             ORDER BY t.date_at DESC, t.id DESC
         ";
-        $stm = $pdo->prepare($sql);
-        $stm->execute($params);
+        $stm = $pdo->prepare($sql); $stm->execute($params);
         $rows = $stm->fetchAll();
 
         $sumIncome = 0.0; $sumExpense = 0.0;
@@ -91,8 +78,6 @@ class TransactionsController extends Controller
             if (in_array(($r['category_kind'] ?? ''), ['expense','debt','saving'])) $sumExpense += (float)$r['amount'];
         }
 
-        // Mes bonito (para UI)
-        // Si hay rango, muestro el mes de inicio como referencia
         $refDate = $from ? new \DateTime($from) : new \DateTime($start);
         if (class_exists(\IntlDateFormatter::class)) {
             $fmt = new \IntlDateFormatter('es_CO', \IntlDateFormatter::NONE, \IntlDateFormatter::NONE, $refDate->getTimezone(), \IntlDateFormatter::GREGORIAN, 'LLLL yyyy');
@@ -101,12 +86,12 @@ class TransactionsController extends Controller
             $mesBonito = ucfirst(date('F Y', $refDate->getTimestamp()));
         }
 
-        // Categorías (para modal de filtros)
+        $pdoCats = $pdo;
         $cats = [
-            'expense' => $this->fetchCats($pdo, $userId, ['expense']),
-            'debt'    => $this->fetchCats($pdo, $userId, ['debt']),
-            'saving'  => $this->fetchCats($pdo, $userId, ['saving']),
-            'income'  => $this->fetchCats($pdo, $userId, ['income']),
+            'expense' => $this->fetchCats($pdoCats, $userId, ['expense']),
+            'debt'    => $this->fetchCats($pdoCats, $userId, ['debt']),
+            'saving'  => $this->fetchCats($pdoCats, $userId, ['saving']),
+            'income'  => $this->fetchCats($pdoCats, $userId, ['income']),
         ];
 
         return $this->view('transactions/index', [
@@ -137,6 +122,7 @@ class TransactionsController extends Controller
         if (!$userId) { header('Location: /login?redirect='.$_SERVER['REQUEST_URI']); exit; }
 
         $pdo = Database::connection();
+        // Semilla idempotente (ya no se dispara si solo están archivadas)
         $this->ensureDefaultCategories($pdo, $userId);
 
         $type = $_GET['type'] ?? 'expense';
@@ -183,15 +169,16 @@ class TransactionsController extends Controller
         $description = trim($_POST['description'] ?? '');
         $date_at     = $_POST['date_at'] ?? date('Y-m-d');
 
-        $amount = $this->parseAmount($amountRaw);
+        // Parse como ENTERO DE PESOS (quita puntos/comas/espacios/símbolos)
+        $amountInt = $this->parseAmountCOP($amountRaw);
 
         $catStmt = $pdo->prepare("SELECT id, kind FROM categories WHERE id=:id AND user_id=:uid");
         $catStmt->execute([':id'=>$category_id, ':uid'=>$userId]);
         $cat = $catStmt->fetch();
 
         $errors = [];
-        if (!$cat)                                        $errors[] = 'Selecciona una categoría válida.';
-        if ($amount <= 0)                                 $errors[] = 'El monto debe ser mayor a 0.';
+        if (!$cat)                                          $errors[] = 'Selecciona una categoría válida.';
+        if ($amountInt <= 0)                                $errors[] = 'El monto debe ser mayor a 0.';
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date_at)) $errors[] = 'Fecha inválida (YYYY-MM-DD).';
 
         if ($errors) {
@@ -201,7 +188,8 @@ class TransactionsController extends Controller
             exit;
         }
 
-        if ($cat['kind'] !== 'income' && $amount > 0) $amount = -$amount;
+        // Aplica signo según tipo
+        $amount = $this->normalizeByType($amountInt, $cat['kind']);
 
         $stmt = $pdo->prepare("
             INSERT INTO transactions (user_id, category_id, date_at, description, amount, status, source)
@@ -279,17 +267,19 @@ class TransactionsController extends Controller
         $description= trim($_POST['description'] ?? '');
         $date_at    = $_POST['date_at'] ?? date('Y-m-d');
 
-        $amount = $this->parseAmount($amountRaw);
+        // Parse como entero COP
+        $amountInt = $this->parseAmountCOP($amountRaw);
 
         $c = $pdo->prepare("SELECT id, kind FROM categories WHERE id=:cid AND user_id=:uid");
         $c->execute([':cid'=>$categoryId, ':uid'=>$userId]);
         $cat = $c->fetch();
 
-        if (!$id || !$cat || $amount<=0) {
+        if (!$id || !$cat || $amountInt<=0) {
             $_SESSION['flash_error']='Datos inválidos.'; header('Location:/transactions'); exit;
         }
 
-        if ($cat['kind'] !== 'income' && $amount > 0) $amount = -$amount;
+        // Aplica signo según tipo
+        $amount = $this->normalizeByType($amountInt, $cat['kind']);
 
         $u = $pdo->prepare("
             UPDATE transactions
@@ -334,27 +324,33 @@ class TransactionsController extends Controller
 
     private function dmyToYmd(string $dmy): ?string
     {
-        // dd/mm/yyyy -> yyyy-mm-dd
         if (!preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $dmy)) return null;
         [$d,$m,$y] = explode('/',$dmy);
         return sprintf('%04d-%02d-%02d',(int)$y,(int)$m,(int)$d);
     }
 
-    private function parseAmount(string $raw): float
+    /**
+     * Convierte string a ENTERO de pesos COP.
+     * - Quita todo lo que no sea dígito (mantiene la magnitud exacta).
+     * - Respeta un posible signo negativo en el string original.
+     *   "250.000" => 250000, "COP - 1,200,000" => -1200000
+     */
+    private function parseAmountCOP(string $raw): int
     {
-        // admite: "1.200.000", "1,200,000", "1200000", "1200.50"
-        $clean = preg_replace('/[^\d,\.]/', '', $raw);
-        // si tiene ambos separadores, asumimos que el último es decimal
-        if (strpos($clean, ',') !== false && strpos($clean, '.') !== false) {
-            $clean = str_replace('.', '', $clean);      // miles
-            $clean = str_replace(',', '.', $clean);     // decimales
-        } else {
-            // si solo tiene comas, convierto a punto
-            if (strpos($clean, ',') !== false && strpos($clean, '.') === false) {
-                $clean = str_replace(',', '.', $clean);
-            }
-        }
-        return (float)$clean;
+        $raw = trim($raw);
+        if ($raw === '') return 0;
+        $neg = str_contains($raw, '-');
+        $digits = preg_replace('/\D+/', '', $raw);
+        if ($digits === '') return 0;
+        $n = (int)$digits;
+        return $neg ? -$n : $n;
+    }
+
+    /** Aplica signo según el tipo de categoría */
+    private function normalizeByType(int $amount, string $kind): int
+    {
+        $kind = strtolower((string)$kind);
+        return in_array($kind, ['expense','debt'], true) ? -abs($amount) : abs($amount);
     }
 
     private function fetchCats(\PDO $pdo, int $uid, array $kinds)
@@ -367,9 +363,17 @@ class TransactionsController extends Controller
         return $q->fetchAll();
     }
 
+    /**
+     * Sembrado idempotente:
+     * - Cuenta TODAS las categorías (activas o archivadas).
+     * - Solo inserta si NO existe ninguna del tipo para el usuario.
+     */
     private function ensureDefaultCategories(\PDO $pdo, int $userId): void
     {
-        $q = $pdo->prepare("SELECT kind, COUNT(*) n FROM categories WHERE user_id=:uid AND (is_archived IS NULL OR is_archived=0) GROUP BY kind");
+        $q = $pdo->prepare("SELECT kind, COUNT(*) n
+                              FROM categories
+                             WHERE user_id=:uid
+                          GROUP BY kind");
         $q->execute([':uid'=>$userId]);
         $have = [];
         foreach ($q->fetchAll() as $r) $have[$r['kind']] = (int)$r['n'];
@@ -396,6 +400,7 @@ class TransactionsController extends Controller
         if (!$toInsert) return;
 
         $pdo->beginTransaction();
+        // IMPORTANTE: con índice único (user_id, kind, name) esto es 100% idempotente
         $stmt = $pdo->prepare("
             INSERT IGNORE INTO categories
             (user_id, parent_id, name, kind, color_hex, is_variable, sort_order, is_archived)

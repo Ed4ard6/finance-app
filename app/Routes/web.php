@@ -6,6 +6,7 @@ use App\Controllers\DashboardController;
 use App\Controllers\TransactionsController;
 use App\Controllers\RulesController;
 use App\Controllers\CategoriesController;
+use App\Controllers\BudgetsController;  // 👈 necesario
 use App\Middleware\Auth;
 
 // ===== Públicas
@@ -36,11 +37,30 @@ $router->get('/transactions/edit', function () {
     (new TransactionsController)->edit();  // ?id=123
 });
 
-// Estos aún no usan controlador (no modificados)
+// ===== Presupuestos
 $router->get('/budgets', function () {
     (new Auth)();
-    require BASE_PATH . '/app/Views/budgets/index.php';
+    (new BudgetsController)->index();              // Vista principal con totales, período, drill-down
 });
+$router->post('/budgets/copy-prev', function () {  // Copiar del mes anterior (POST)
+    (new Auth)();
+    (new BudgetsController)->copyPrev();
+});
+$router->get('/budgets/detail', function () {      // Drill-down (modal)
+    (new Auth)();
+    (new BudgetsController)->detail();             // espera: ?ym=YYYY-MM&range=h1|h2|m&cid=123
+});
+
+$router->get('/budgets/bulk', function () {
+    (new Auth)();
+    (new BudgetsController)->bulk();               // Formulario edición en bloque
+});
+$router->post('/budgets/bulk', function () {
+    (new Auth)();
+    (new BudgetsController)->bulkSave();           // Guardar edición en bloque
+});
+
+// ===== Aún sin controlador propio
 $router->get('/rules', function () {
     (new Auth)();
     require BASE_PATH . '/app/Views/rules/index.php';
@@ -54,7 +74,7 @@ $router->get('/debts', function () {
     require BASE_PATH . '/app/Views/debts/index.php';
 });
 
-// ===== CATEGORÍAS (vistas GET) ———— LIMPIAS Y SIN DUPLICADOS ————
+// ===== CATEGORÍAS (vistas GET)
 $router->get('/categories', function () {
     (new Auth)();
     (new CategoriesController)->index();
@@ -91,7 +111,7 @@ $router->get('/reports/monthly', function () {
     require BASE_PATH . '/app/Views/reports/mensual.php';
 });
 
-// ===== Acciones POST
+// ===== Acciones POST varias
 $router->post('/settings/salary', function () {
     (new Auth)();
     (new DashboardController)->saveSalary();
@@ -124,15 +144,3 @@ $router->post('/categories/update', function () {
     (new Auth)();
     (new CategoriesController)->update();
 });
-
-/*
- * Eliminado (comentado) por duplicado:
- *
- * // $router->get('/categories', ...);
- * // $router->get('/categories/create', ...);
- * // $router->post('/categories', ...);
- * // $router->get('/categories/edit', ...);
- * // $router->post('/categories/update', ...);
- *
- * Ya están definidos arriba, una sola vez.
- */
