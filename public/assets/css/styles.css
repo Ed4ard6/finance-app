@@ -4,7 +4,7 @@
    1) Variables (tema base + tema claro)
    2) Reset / Base
    3) Layout general
-   4) Header
+   4) Header (unificado con "píldoras")
    5) Landing (página pública)
    6) Auth (login/register)
    7) Utilidades (espacios, grid)
@@ -92,9 +92,13 @@ main.container {
 
 
 /* =======================================================
-   4) HEADER
+   4) HEADER (UNIFICADO CON "PÍLDORAS")
    ======================================================= */
-header.main-header {
+
+/* Nota: En header.php existen reglas en un <style>. Para que este
+   archivo tenga prioridad sin tocar el header, aumento especificidad. */
+
+.main-header {
   width: 100%;
   padding: 10px 24px;
   display: flex;
@@ -104,23 +108,119 @@ header.main-header {
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border-color);
   height: 70px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
 }
 
-header .logo h2 {
+.main-header .logo h2 {
   color: var(--accent-color);
   margin: 0;
 }
 
-header .nav a {
-  color: var(--muted-color);
-  text-decoration: none;
-  font-weight: 500;
-  margin-left: 20px;
-  transition: color 0.25s ease;
+/* —— Pastillas del menú —— */
+.main-header .nav a,
+.main-header .summary-like{
+  display:inline-flex;
+  align-items:center;
+  gap:.35rem;
+  padding:.48rem .80rem !important;          /* gana a header.php */
+  border-radius:12px !important;
+  text-decoration:none;
+  border:1px solid rgba(148,163,184,.15) !important; /* #94a3b8 opaco */
+  background: rgba(2,6,23,.55) !important;   /* azul muy oscuro translúcido */
+  color:#cbd5e1 !important;                  /* slate-300 */
+  box-shadow: 0 2px 6px rgba(0,0,0,.25);
+  transition: background .15s ease, color .15s ease, transform .08s ease, border-color .15s ease;
+  margin-left: .5rem;                        /* reemplaza el margin-left suelto */
 }
 
-header .nav a:hover {
-  color: var(--text-color);
+/* Hover */
+.main-header .nav a:hover,
+.main-header .summary-like:hover{
+  background: rgba(15,23,42,.85) !important; /* #0f172a */
+  color:#fff !important;
+  transform: translateY(-1px);
+}
+
+/* Activo (y Reportes abierto) */
+.main-header .nav a.active,
+.main-header .summary-like[aria-expanded="true"]{
+  background: linear-gradient(135deg,#6d28d9 0%, #4f46e5 50%, #2563eb 100%) !important;
+  color:#fff !important;
+  border-color: transparent !important;
+  box-shadow: 0 0 0 2px rgba(99,102,241,.25) inset;
+}
+
+/* Ícono botón (derecha) consistente */
+.main-header .btn-icon{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:36px; height:36px;
+  border-radius:.5rem;
+  color:#e5e7eb;
+  border:1px solid rgba(148,163,184,.20);
+  background: rgba(2,6,23,.55);
+  text-decoration:none;
+}
+.main-header .btn-icon:hover{ background:#111827; }
+
+/* Dropdown flotante/bloque */
+.dropdown-fixed{
+  position:fixed;
+  min-width:240px;
+  background:#0b1220;
+  border:1px solid #1f2937;
+  border-radius:.5rem;
+  padding:.35rem;
+  box-shadow:0 10px 20px rgba(0,0,0,.35);
+  display:none;
+  z-index:2000;
+}
+.dropdown-fixed.show{ display:block !important; }
+.dropdown-fixed a{
+  display:flex;
+  padding:.55rem .70rem;
+  border-radius:.45rem;
+  color:#cbd5e1;
+  text-decoration:none;
+}
+.dropdown-fixed a:hover{ background:#111827; color:#fff; }
+
+/* Responsive: nav vertical + píldoras a lo ancho */
+@media (max-width: 900px){
+  .main-header .nav{
+    position: fixed;
+    left: 0; right: 0;
+    top: 70px; /* coincide con altura header */
+    background:#0b1220;
+    border-bottom: 1px solid #1f2937;
+    padding: .5rem .75rem;
+    display: none;            /* cerrado por defecto */
+    flex-direction: column;
+    align-items: stretch;
+    gap:.35rem;
+    white-space: normal;
+  }
+  .main-header .nav.open{ display:flex; }
+
+  .main-header .nav a,
+  .main-header .summary-like{
+    width:100%;
+    margin-left: 0 !important;
+  }
+
+  /* Dropdown en móvil: bloque estático */
+  .dropdown-fixed{
+    position: static;
+    width: 100%;
+    min-width: 0;
+    margin-top: .25rem;
+    display: none;
+    box-shadow: none;
+  }
+  .dropdown-fixed.show{ display:block !important; }
 }
 
 
@@ -225,7 +325,7 @@ header .nav a:hover {
    7) UTILIDADES (espacios, grid responsivo)
    ======================================================= */
 
-   /* Utilidades tipográficas */
+/* Utilidades tipográficas */
 .text-muted { color: var(--muted-color); }
 .fw-600     { font-weight: 600; }
 .fs-90      { font-size: .90rem; }
@@ -347,14 +447,20 @@ header .nav a:hover {
    9) DASHBOARD (ajustes de página)
    ======================================================= */
 
-/* Fondo un poco más claro SOLO cuando el body tenga esta clase */
-body.page-dashboard{
-  --bg-color: #9fa9b5;   /* gris muy claro */
-  --text-color: #0f1724; /* texto más oscuro para mejor legibilidad */
-  --muted-color: #203a67;/* gris medio para subtítulos en esta página */
-}
+/* ⚠️ Este bloque forzaba un fondo gris claro en el dashboard
+   (por eso “se apagaba” visualmente). Si quieres mantener el
+   tema oscuro del resto del sitio, DEJA COMENTADO este bloque.
+   Si prefieres el fondo claro, descomenta. */
 
-/* (Si deseas más tweaks solo para dashboard, añádelos aquí) */
+/*
+body.page-dashboard{
+  --bg-color: #9fa9b5;   // gris claro
+  --text-color: #0f1724; // texto oscuro
+  --muted-color: #203a67; // gris medio para subtítulos
+}
+*/
+
+/* (Puedes añadir más tweaks específicos del dashboard aquí) */
 
 
 /* =======================================================
